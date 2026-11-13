@@ -3,188 +3,391 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wu Tong — Automotive HMI Designer &amp; Developer</title>
-<meta name="description" content="Personal homepage of Wu Tong, an automotive HMI designer and developer based in Nanjing, China. Instrument clusters, cockpit interfaces, design systems and software prototypes.">
-<meta name="theme-color" content="#0a0c10">
+<title>wutong-cluster — Interactive Instrument Cluster in Vanilla JavaScript</title>
+<meta name="description" content="A fully interactive automotive instrument cluster rendered with vanilla JavaScript and Canvas 2D. Live needle physics, drive modes, themes and a driving simulation. No frameworks, no build step.">
 <style>
   :root{
-    --bg:#0a0c10; --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06);
-    --line:rgba(255,255,255,.09); --text:#eef1f5; --muted:#9aa7b5; --faint:#6b7889;
-    --accent:#f5b544; --accent2:#ff8a5c; --radius:18px;
+    --page-bg:#07090c; --page-fg:#e8edf2; --page-dim:#93a1b0; --card:#10151b; --line:#1f2833;
+    --accent:#38bdf8;
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  html{scroll-behavior:smooth}
-  body{background:var(--bg);color:var(--text);line-height:1.65;overflow-x:hidden;
-    font-family:"Avenir Next","Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif}
-  ::selection{background:var(--accent);color:#14100a}
-
-  /* ambient background */
-  .bg{position:fixed;inset:0;z-index:-2;background:
-    radial-gradient(900px 480px at 85% -10%, rgba(245,181,68,.13), transparent 60%),
-    radial-gradient(700px 500px at -10% 30%, rgba(94,140,255,.10), transparent 60%),
-    radial-gradient(800px 600px at 50% 115%, rgba(255,138,92,.07), transparent 60%), var(--bg)}
-  .grid-overlay{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.5;
-    background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
-    background-size:56px 56px;
-    -webkit-mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 30%,transparent 75%);
-            mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 30%,transparent 75%)}
-
-  .wrap{max-width:920px;margin:0 auto;padding:72px 24px 72px}
-
-  /* hero */
-  .tag{display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);
-    border:1px solid rgba(245,181,68,.35);border-radius:999px;padding:5px 14px;background:rgba(245,181,68,.06)}
-  .tag::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
-  h1{font-size:clamp(52px,9vw,88px);line-height:1.04;font-weight:800;letter-spacing:-.02em;margin-top:26px}
-  h1 .cn{display:block;font-size:clamp(22px,3.4vw,30px);font-weight:500;letter-spacing:.42em;margin-top:14px;
-    color:transparent;-webkit-text-stroke:1px rgba(238,241,245,.45)}
-  .role{margin-top:22px;font-size:clamp(18px,2.6vw,22px);font-weight:600;
-    background:linear-gradient(92deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;width:fit-content}
-  .loc{margin-top:8px;color:var(--muted);font-size:15px;letter-spacing:.06em}
-  .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
-  .btn{display:inline-block;padding:11px 22px;border-radius:999px;font-size:15px;font-weight:600;transition:.25s;border:1px solid var(--line)}
-  a.btn{color:var(--text);text-decoration:none;background:var(--panel)}
-  a.btn:hover{transform:translateY(-2px);border-color:rgba(245,181,68,.5);background:var(--panel2)}
-  a.btn.primary{background:linear-gradient(92deg,var(--accent),var(--accent2));color:#181106;border:none}
-  a.btn.primary:hover{filter:brightness(1.07)}
-  .stats{display:flex;gap:0;flex-wrap:wrap;margin-top:44px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);overflow:hidden}
-  .stat{flex:1 1 180px;padding:18px 22px;border-right:1px solid var(--line)}
-  .stat:last-child{border-right:none}
-  .stat b{display:block;font-size:19px;font-weight:700}
-  .stat span{font-size:13px;color:var(--muted)}
-
-  section{margin-top:64px}
-  .shead{display:flex;align-items:center;gap:16px;margin-bottom:22px}
-  .shead h2{font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);white-space:nowrap}
-  .shead::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
-  .shead .no{font-size:12px;color:var(--faint);letter-spacing:.1em}
-  p.lead{color:#cdd6df;max-width:68ch;font-size:16.5px}
-
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  @media (max-width:640px){.grid{grid-template-columns:1fr}.stat{border-right:none;border-bottom:1px solid var(--line)}.stat:last-child{border-bottom:none}}
-  .card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px;transition:.3s;overflow:hidden}
-  .card::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;background:linear-gradient(90deg,transparent,rgba(245,181,68,.55),transparent);opacity:0;transition:.3s}
-  .card:hover{transform:translateY(-4px);background:var(--panel2);border-color:rgba(255,255,255,.16)}
-  .card:hover::before{opacity:1}
-  .card .idx{font-size:12px;color:var(--faint);letter-spacing:.14em}
-  .card h3{font-size:17.5px;margin:8px 0 8px;font-weight:700}
-  .card p{font-size:14.5px;color:var(--muted)}
-  .card .tags{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
-  .card .tags i{font-style:normal;font-size:12px;color:#d8b26a;border:1px solid rgba(245,181,68,.28);border-radius:999px;padding:2px 10px;background:rgba(245,181,68,.05)}
-
-  ul.skills{list-style:none;display:flex;flex-wrap:wrap;gap:10px}
-  ul.skills li{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:7px 16px;font-size:14px;color:#cdd6df;transition:.25s}
-  ul.skills li:hover{border-color:rgba(245,181,68,.5);color:var(--text);transform:translateY(-2px)}
-
-  .contact p{font-size:16.5px;color:#cdd6df}
+  body{background:var(--page-bg);color:var(--page-fg);font-family:"Inter","Segoe UI",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;line-height:1.55}
   a{color:var(--accent);text-decoration:none}
   a:hover{text-decoration:underline}
-  footer{margin-top:72px;border-top:1px solid var(--line);padding-top:24px;color:var(--muted);font-size:14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 56px}
+  header.site{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 18px;padding:10px 0 20px;border-bottom:1px solid var(--line)}
+  header.site h1{font-size:30px;font-weight:800;letter-spacing:.2px}
+  header.site h1 .dot{color:var(--accent)}
+  header.site p{color:var(--page-dim);font-size:15px}
+  header.site .spacer{flex:1}
+  .ghlink{font-size:14px;border:1px solid var(--line);padding:6px 12px;border-radius:999px;color:var(--page-fg)}
+  .ghlink:hover{border-color:var(--accent);text-decoration:none}
 
-  .reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
-  .reveal.in{opacity:1;transform:none}
-  @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+  /* ---------- cluster ---------- */
+  .stage{margin:26px 0 18px}
+  .cluster{
+    --cbg1:#11161d; --cbg2:#05070a; --cfg:#eef3f8; --cdim:#8b98a6; --ctrack:#232c36;
+    aspect-ratio:1920/532; width:100%; border-radius:26px; position:relative; overflow:hidden;
+    background:linear-gradient(180deg,var(--cbg1),var(--cbg2));
+    box-shadow:0 24px 60px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.06);
+    display:flex; flex-direction:column; padding:2.2% 3%;
+    transition:background .4s;
+  }
+  .cluster[data-theme="light"]{--cbg1:#f4f6f8; --cbg2:#dde3e9; --cfg:#131a21; --cdim:#5d6b78; --ctrack:#c3ccd4;
+    box-shadow:0 24px 60px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.7)}
+  .topbar{display:flex;align-items:center;gap:18px;color:var(--cdim);font-size:clamp(10px,1.5vw,17px);font-weight:600}
+  .topbar .clock{color:var(--cfg);font-variant-numeric:tabular-nums}
+  .topbar .spacer{flex:1}
+  .telltales{display:flex;gap:14px;align-items:center}
+  .tt{width:clamp(14px,2vw,24px);height:clamp(14px,2vw,24px);opacity:.16;transition:opacity .2s}
+  .tt.on{opacity:1}
+  .tt svg{width:100%;height:100%;display:block}
+  .mid{flex:1;display:flex;align-items:stretch;gap:2%}
+  .dialbox{flex:0 0 31%;position:relative}
+  .dialbox canvas{position:absolute;inset:0;width:100%;height:100%}
+  .centerbox{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--cfg);min-width:0}
+  .gear{font-size:clamp(20px,3.4vw,44px);font-weight:800;line-height:1}
+  .gear small{display:block;font-size:clamp(8px,1.1vw,13px);color:var(--cdim);font-weight:600;letter-spacing:.18em;margin-top:4px}
+  .socwrap{width:min(300px,80%);margin-top:5%}
+  .socmeta{display:flex;justify-content:space-between;font-size:clamp(9px,1.2vw,14px);color:var(--cdim);font-weight:600;margin-bottom:5px}
+  .socmeta b{color:var(--cfg);font-variant-numeric:tabular-nums}
+  .socbar{height:clamp(5px,.9vw,10px);border-radius:99px;background:var(--ctrack);overflow:hidden}
+  .socbar i{display:block;height:100%;width:78%;border-radius:99px;background:var(--accent);transition:width .3s}
+  .range{margin-top:4%;font-size:clamp(10px,1.4vw,17px);color:var(--cdim);font-weight:600}
+  .range b{color:var(--cfg);font-size:1.25em;font-variant-numeric:tabular-nums}
+  .botbar{display:flex;justify-content:space-between;color:var(--cdim);font-size:clamp(9px,1.3vw,15px);font-weight:600;font-variant-numeric:tabular-nums}
+  .botbar b{color:var(--cfg)}
+
+  /* ---------- controls ---------- */
+  .controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+  .btn{appearance:none;border:1px solid var(--line);background:#171e26;color:var(--page-fg);font:inherit;font-size:14px;font-weight:600;padding:8px 16px;border-radius:999px;cursor:pointer}
+  .btn:hover{border-color:var(--accent)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#06121c}
+  .seg{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .seg button{appearance:none;border:0;background:transparent;color:var(--page-dim);font:inherit;font-size:14px;font-weight:600;padding:8px 14px;cursor:pointer}
+  .seg button.on{background:var(--accent);color:#06121c}
+  .sliderbox{display:flex;align-items:center;gap:10px;color:var(--page-dim);font-size:13px;font-weight:600}
+  input[type=range]{accent-color:var(--accent);width:170px}
+  .chk{display:flex;align-items:center;gap:6px;color:var(--page-dim);font-size:13px;font-weight:600;cursor:pointer}
+  .chk input{accent-color:var(--accent)}
+
+  /* ---------- about ---------- */
+  .about{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:26px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+  .card h2{font-size:16px;margin-bottom:8px}
+  .card p,.card li{color:var(--page-dim);font-size:14px}
+  .card ul{padding-left:18px}
+  code{background:#0a0e13;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:12.5px;color:#c8e6ff}
+  footer.site{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);color:var(--page-dim);font-size:13px;display:flex;flex-wrap:wrap;gap:8px 18px}
 </style>
 </head>
 <body>
-<div class="bg"></div><div class="grid-overlay"></div>
 <div class="wrap">
-
-  <header class="reveal in">
-    <span class="tag">Personal Homepage</span>
-    <h1>Wu Tong<span class="cn">吴 桐</span></h1>
-    <div class="role">Automotive HMI Designer &amp; Developer</div>
-    <div class="loc">NANJING · CHINA</div>
-    <div class="cta">
-      <a class="btn primary" href="https://github.com/Alcindora">GitHub ↗</a>
-      <a class="btn" href="mailto:leon.wutong@gmail.com">leon.wutong@gmail.com</a>
-    </div>
-    <div class="stats">
-      <div class="stat"><b>5120 × 1440</b><span>Full-width cockpit displays</span></div>
-      <div class="stat"><b>1920 × 532</b><span>Digital cluster layouts</span></div>
-      <div class="stat"><b>Design → Code</b><span>Systems, prototypes, software</span></div>
-    </div>
+  <header class="site">
+    <h1>wutong-cluster<span class="dot">.js</span></h1>
+    <p>An interactive automotive instrument cluster, rendered live with vanilla JavaScript + Canvas 2D.</p>
+    <div class="spacer"></div>
+    <a class="ghlink" href="https://github.com/Alcindora/wutong">View source on GitHub</a>
   </header>
 
-  <section class="reveal">
-    <div class="shead"><span class="no">01</span><h2>About</h2></div>
-    <p class="lead">I design and build human–machine interfaces for cars — digital instrument clusters, in-vehicle infotainment and connected cockpit experiences. My work sits between design and engineering: I create interface design systems in Figma, build interactive prototypes, and develop working software, from HMI interface themes to utility mini-programs and automation tools.</p>
-  </section>
+  <section class="stage">
+    <div class="cluster" id="cluster" data-theme="dark">
+      <div class="topbar">
+        <span class="clock" id="clock">--:--</span>
+        <span id="temp">21°C</span>
+        <span id="datestr"></span>
+        <div class="spacer"></div>
+        <div class="telltales">
+          <span class="tt" id="tt-left" title="Left turn signal"><svg viewBox="0 0 24 24" fill="#4ade80"><path d="M11 5l-7 7 7 7V5z"/><path d="M13 8h8v8h-8z" opacity=".0"/></svg></span>
+          <span class="tt" id="tt-beam" title="High beam"><svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M3 8h6M3 12h6M3 16h6"/><path d="M11 6c3 1.6 3 10.4 0 12"/></svg></span>
+          <span class="tt" id="tt-belt" title="Seat belt reminder"><svg viewBox="0 0 24 24" fill="#f87171"><circle cx="12" cy="6" r="3"/><path d="M6 21c0-3.9 2.7-6 6-6s6 2.1 6 6h-3.4c0-2-1.1-3-2.6-3s-2.6 1-2.6 3H6z"/></svg></span>
+          <span class="tt" id="tt-right" title="Right turn signal"><svg viewBox="0 0 24 24" fill="#4ade80"><path d="M13 5l7 7-7 7V5z"/></svg></span>
+        </div>
+      </div>
 
-  <section class="reveal">
-    <div class="shead"><span class="no">02</span><h2>What I Do</h2></div>
-    <div class="grid">
-      <div class="card">
-        <h3>HMI Interface Design</h3>
-        <p>Instrument clusters and infotainment interfaces for production-oriented automotive projects, including full-width 5120×1440 cockpit displays and 1920×532 cluster layouts.</p>
+      <div class="mid">
+        <div class="dialbox"><canvas id="dialSpeed"></canvas></div>
+        <div class="centerbox">
+          <div class="gear"><span id="gear">D</span><small>GEAR</small></div>
+          <div class="socwrap">
+            <div class="socmeta"><span>BATTERY</span><b><span id="soc">78</span>%</b></div>
+            <div class="socbar"><i id="socfill"></i></div>
+          </div>
+          <div class="range">RANGE <b id="range">412</b> km</div>
+        </div>
+        <div class="dialbox"><canvas id="dialPower"></canvas></div>
       </div>
-      <div class="card">
-        <h3>Design Systems &amp; UI Kits</h3>
-        <p>Reusable component libraries, gauge and dial systems, and editable Figma templates for automotive interfaces.</p>
-      </div>
-      <div class="card">
-        <h3>Prototyping &amp; Development</h3>
-        <p>Turning designs into working software: interactive prototypes, web-based 3D spaces, and front-end implementations of interface concepts.</p>
-      </div>
-      <div class="card">
-        <h3>Mini-Programs &amp; Tools</h3>
-        <p>WeChat mini-programs and small tools — including an automatic decoration quotation calculator and media utility apps — designed, built and maintained end to end.</p>
+
+      <div class="botbar">
+        <span>ODO <b id="odo">48620.0</b> km</span>
+        <span>TRIP <b id="trip">128.4</b> km</span>
+        <span>AVG <b id="avg">14.2</b> kWh/100km</span>
+        <span id="modename">COMFORT</span>
       </div>
     </div>
   </section>
 
-  <section class="reveal">
-    <div class="shead"><span class="no">03</span><h2>Selected Work</h2></div>
-    <div class="grid">
-      <div class="card">
-        <div class="idx">W — 01</div>
-        <h3>Car Instrument Cluster UI</h3>
-        <p>A detailed 1920×532 digital cluster interface with layered gauges, drive modes and theme variants, built as a fully editable design system.</p>
-        <div class="tags"><i>Figma</i><i>Design System</i><i>Cluster</i></div>
-      </div>
-      <div class="card">
-        <div class="idx">W — 02</div>
-        <h3>BotForge</h3>
-        <p>A virtual 3D office populated by AI agent characters — an experiment in giving software agents a shared, visible workspace.</p>
-        <div class="tags"><i>3D Space</i><i>AI Agents</i></div>
-      </div>
-      <div class="card">
-        <div class="idx">W — 03</div>
-        <h3>Decoration Quote Mini-Program</h3>
-        <p>A WeChat mini-program that turns construction drawings into itemised renovation quotations automatically.</p>
-        <div class="tags"><i>WeChat</i><i>Automation</i></div>
-      </div>
-      <div class="card">
-        <div class="idx">W — 04</div>
-        <h3>Daily Motion Sketches</h3>
-        <p>A daily short-video practice exploring generative scenery, motion and sound — produced with an automated pipeline I built.</p>
-        <div class="tags"><i>Generative</i><i>Video</i></div>
-      </div>
+  <section class="controls">
+    <button class="btn primary" id="btnDrive">▶ Drive simulation</button>
+    <div class="sliderbox">Throttle <input type="range" id="throttle" min="0" max="100" value="0"><span id="thrval">0%</span></div>
+    <div class="seg" id="modeseg">
+      <button data-mode="eco">Eco</button>
+      <button data-mode="comfort" class="on">Comfort</button>
+      <button data-mode="sport">Sport</button>
+    </div>
+    <div class="seg" id="themeseg">
+      <button data-theme-val="dark" class="on">Dark</button>
+      <button data-theme-val="light">Light</button>
+    </div>
+    <label class="chk"><input type="checkbox" id="chkBeam"> High beam</label>
+    <label class="chk"><input type="checkbox" id="chkBelt"> Belt warning</label>
+    <label class="chk"><input type="checkbox" id="chkSignal"> Turn signals</label>
+  </section>
+
+  <section class="about">
+    <div class="card">
+      <h2>What is this?</h2>
+      <p>A working instrument-cluster renderer that runs entirely in the browser. Both gauges are drawn on
+      <code>&lt;canvas&gt;</code> every animation frame — ticks, arcs, numerals and needles are computed in
+      JavaScript, not images. It is a reference implementation for anyone building dashboard or HMI interfaces on the web.</p>
+    </div>
+    <div class="card">
+      <h2>Features</h2>
+      <ul>
+        <li>Spring-physics needles (stiffness + damping), no CSS transitions</li>
+        <li>Drive simulation with acceleration, cruise and regenerative braking</li>
+        <li>Eco / Comfort / Sport modes re-tune ranges, redline and accent color</li>
+        <li>Dark &amp; light cluster themes, live clock, tell-tale indicators</li>
+        <li>Retina-aware canvas sizing, zero dependencies, zero build step</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>How it works</h2>
+      <p>One <code>requestAnimationFrame</code> loop integrates a simple vehicle model (throttle → power → speed,
+      with drag and regen), then feeds both values through independent spring integrators so the needles
+      overshoot and settle like real stepper-motor gauges. Drawing code is plain Canvas 2D paths.</p>
+    </div>
+    <div class="card">
+      <h2>Reuse it</h2>
+      <p>The whole demo is a single <code>index.html</code> in the
+      <a href="https://github.com/Alcindora/wutong">GitHub repository</a> (MIT). Copy the gauge renderer,
+      change the scales, and it becomes a tachometer, a pressure gauge, or an industrial dashboard.</p>
     </div>
   </section>
 
-  <section class="reveal">
-    <div class="shead"><span class="no">04</span><h2>Tools</h2></div>
-    <ul class="skills">
-      <li>Figma</li><li>Sketch</li><li>Photoshop</li><li>HMI Design Systems</li>
-      <li>HTML / CSS / JavaScript</li><li>Prototyping</li><li>WeChat Mini-Programs</li><li>Git &amp; GitHub</li>
-    </ul>
-  </section>
-
-  <section class="reveal contact">
-    <div class="shead"><span class="no">05</span><h2>Contact</h2></div>
-    <p>GitHub: <a href="https://github.com/Alcindora">github.com/Alcindora</a><br>
-    Email: <a href="mailto:leon.wutong@gmail.com">leon.wutong@gmail.com</a></p>
-  </section>
-
-  <footer>
-    <span>© 2026 Wu Tong</span>
-    <span>wutong.qd.je · Designed &amp; built by hand — no templates.</span>
+  <footer class="site">
+    <span>Built by <a href="https://wutong.qd.je">Wu Tong (Alcindora)</a> — automotive HMI designer &amp; developer, Nanjing.</span>
+    <span>Vanilla JavaScript · Canvas 2D · No frameworks</span>
   </footer>
 </div>
+
 <script>
-  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .08 });
-  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+"use strict";
+/* ================= state ================= */
+const MODES = {
+  eco:     { name:"ECO",     accent:"#4ade80", maxSpeed:180, powerMax:120, powerMin:-40, redFrom:100 },
+  comfort: { name:"COMFORT", accent:"#38bdf8", maxSpeed:240, powerMax:180, powerMin:-60, redFrom:150 },
+  sport:   { name:"SPORT",   accent:"#fb7185", maxSpeed:260, powerMax:240, powerMin:-80, redFrom:190 }
+};
+let mode = MODES.comfort;
+const S = {
+  speed:0, power:0,                       // displayed (spring) values
+  speedV:0, powerV:0,                     // spring velocities
+  speedT:0, powerT:0,                     // vehicle-model targets
+  soc:78, odo:48620.0, trip:128.4,
+  driving:false, t:0, throttle:0, manual:false,
+  signals:false, sigPhase:0
+};
+const $ = id => document.getElementById(id);
+const clusterEl = $("cluster");
+document.documentElement.style.setProperty("--accent", mode.accent);
+
+/* ================= vehicle model ================= */
+function simTarget(t){
+  // A repeating drive cycle: launch, cruise, lift-off regen, stop.
+  const cyc = t % 36;
+  if (cyc < 6)  return 118 * (1 - Math.exp(-cyc/2.2));        // accelerate
+  if (cyc < 16) return 118 + Math.sin((cyc-6)*0.7)*4;         // cruise
+  if (cyc < 21) return 118 - (cyc-16)*17;                      // brake / regen
+  if (cyc < 26) return 33 + Math.sin((cyc-21)*0.9)*2;          // crawl
+  if (cyc < 31) return 33 - (cyc-26)*6.6;                      // to stop
+  return 0;                                                    // standstill
+}
+function stepVehicle(dt){
+  let targetSpeed;
+  if (S.manual){
+    targetSpeed = (S.throttle/100) * mode.maxSpeed * 0.92;
+  } else if (S.driving){
+    S.t += dt;
+    targetSpeed = simTarget(S.t);
+  } else {
+    targetSpeed = 0;
+  }
+  // first-order approach of true speed, then derive power from acceleration
+  const prev = S.speedTrue || 0;
+  const k = targetSpeed > prev ? 0.55 : 0.8;                  // gentler launch, firmer braking
+  S.speedTrue = prev + (targetSpeed - prev) * Math.min(1, k*dt);
+  const accel = (S.speedTrue - prev) / Math.max(dt, 1e-4);    // km/h per s
+  let p = accel * 2.1 + S.speedTrue * 0.12;                   // accel demand + road load
+  if (accel < -0.5) p = Math.max(p, mode.powerMin);           // regen region
+  S.speedT = S.speedTrue;
+  S.powerT = Math.max(mode.powerMin, Math.min(mode.powerMax, p));
+  // bookkeeping
+  S.odo  += S.speedTrue * dt / 3600;
+  S.trip += S.speedTrue * dt / 3600;
+  S.soc  -= Math.max(0, S.powerT) * dt / 3600 * 0.012;
+  if (S.soc < 5) S.soc = 5;
+}
+
+/* ================= needle springs ================= */
+function spring(cur, vel, target, stiff, damp, dt){
+  const a = (target - cur) * stiff;
+  vel += a * dt;
+  vel *= Math.exp(-damp * dt);
+  cur += vel * dt;
+  return [cur, vel];
+}
+
+/* ================= dial drawing ================= */
+function setupCanvas(cv){
+  const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  const w = Math.max(50, Math.round(r.width*dpr)), h = Math.max(50, Math.round(r.height*dpr));
+  if (cv.width !== w || cv.height !== h){ cv.width = w; cv.height = h; }
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return [ctx, r.width, r.height];
+}
+function css(varName){ return getComputedStyle(clusterEl).getPropertyValue(varName).trim(); }
+
+function drawDial(cv, opts){
+  const [ctx, W, H] = setupCanvas(cv);
+  const cx = W/2, cy = H/2 + H*0.04, R = Math.min(W,H)*0.46;
+  const a0 = Math.PI*0.75, a1 = Math.PI*2.25;                 // 270° sweep
+  const frac = Math.max(0, Math.min(1, (opts.value - opts.min) / (opts.max - opts.min)));
+  const ang = v => a0 + (v - opts.min) / (opts.max - opts.min) * (a1 - a0);
+  const fg = css("--cfg"), dim = css("--cdim"), track = css("--ctrack");
+  ctx.clearRect(0,0,W,H);
+
+  // track arc
+  ctx.lineCap = "round";
+  ctx.beginPath(); ctx.arc(cx,cy,R, a0, a1);
+  ctx.strokeStyle = track; ctx.lineWidth = R*0.075; ctx.stroke();
+  // red zone
+  if (opts.redFrom != null){
+    ctx.beginPath(); ctx.arc(cx,cy,R, ang(opts.redFrom), a1);
+    ctx.strokeStyle = "#ef4444"; ctx.lineWidth = R*0.075; ctx.stroke();
+  }
+  if (opts.zeroAt != null){ // negative (regen) zone for power dial
+    ctx.beginPath(); ctx.arc(cx,cy,R, a0, ang(0));
+    ctx.strokeStyle = "#4ade80"; ctx.lineWidth = R*0.075; ctx.stroke();
+  }
+  // value arc
+  const zeroFrac = opts.zeroAt != null ? (0 - opts.min)/(opts.max - opts.min) : 0;
+  const from = a0 + zeroFrac*(a1-a0), to = a0 + frac*(a1-a0);
+  ctx.beginPath(); ctx.arc(cx,cy,R, Math.min(from,to), Math.max(from,to));
+  ctx.strokeStyle = opts.value < 0 ? "#4ade80" : mode.accent; ctx.lineWidth = R*0.075; ctx.stroke();
+
+  // ticks + numerals
+  ctx.fillStyle = dim; ctx.strokeStyle = dim;
+  ctx.font = `600 ${R*0.115}px Inter, system-ui, sans-serif`;
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  for (let v = opts.min; v <= opts.max + 1e-6; v += opts.step){
+    const a = ang(v), cos = Math.cos(a), sin = Math.sin(a);
+    const major = Math.abs(v / opts.major - Math.round(v / opts.major)) < 1e-6;
+    const r1 = R*0.80, r2 = R*(major ? 0.68 : 0.73);
+    ctx.beginPath();
+    ctx.moveTo(cx + cos*r1, cy + sin*r1); ctx.lineTo(cx + cos*r2, cy + sin*r2);
+    ctx.lineWidth = major ? R*0.022 : R*0.012; ctx.stroke();
+    if (major){
+      ctx.fillText(String(Math.round(v)), cx + cos*R*0.52, cy + sin*R*0.52);
+    }
+  }
+  // needle
+  const na = ang(Math.max(opts.min, Math.min(opts.max, opts.value)));
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,.45)"; ctx.shadowBlur = R*0.03;
+  ctx.beginPath();
+  ctx.moveTo(cx - Math.cos(na)*R*0.10, cy - Math.sin(na)*R*0.10);
+  ctx.lineTo(cx + Math.cos(na)*R*0.86, cy + Math.sin(na)*R*0.86);
+  ctx.strokeStyle = fg; ctx.lineWidth = R*0.028; ctx.lineCap = "round"; ctx.stroke();
+  ctx.restore();
+  ctx.beginPath(); ctx.arc(cx,cy,R*0.075,0,Math.PI*2);
+  ctx.fillStyle = mode.accent; ctx.fill();
+
+  // digital readout
+  ctx.fillStyle = fg;
+  ctx.font = `800 ${R*0.30}px Inter, system-ui, sans-serif`;
+  ctx.fillText(String(Math.round(opts.value)), cx, cy + R*0.52);
+  ctx.fillStyle = dim;
+  ctx.font = `600 ${R*0.105}px Inter, system-ui, sans-serif`;
+  ctx.fillText(opts.unit, cx, cy + R*0.74);
+  ctx.fillText(opts.label, cx, cy - R*0.60);
+}
+
+/* ================= main loop ================= */
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(0.05, (now - last)/1000); last = now;
+  stepVehicle(dt);
+  [S.speed, S.speedV] = spring(S.speed, S.speedV, S.speedT, 26, 7.5, dt);
+  [S.power, S.powerV] = spring(S.power, S.powerV, S.powerT, 34, 8.5, dt);
+
+  drawDial($("dialSpeed"), { value:S.speed, min:0, max:mode.maxSpeed, step:20, major:40,
+                             unit:"km/h", label:"SPEED" });
+  drawDial($("dialPower"), { value:S.power, min:mode.powerMin, max:mode.powerMax, step:40, major:40,
+                             unit:"kW", label:"POWER", redFrom:mode.redFrom, zeroAt:0 });
+
+  // center + bars (cheap DOM updates)
+  $("gear").textContent = S.speedT > 1 ? "D" : (S.driving || S.manual ? "D" : "P");
+  const soc = Math.round(S.soc);
+  $("soc").textContent = soc;
+  $("socfill").style.width = soc + "%";
+  $("range").textContent = Math.round(soc * 5.28);
+  $("odo").textContent = S.odo.toFixed(1);
+  $("trip").textContent = S.trip.toFixed(1);
+
+  // turn signals blink at 1.6 Hz when enabled
+  S.sigPhase += dt * 1.6;
+  const blink = S.signals && (S.sigPhase % 1) < 0.55;
+  $("tt-left").classList.toggle("on", blink);
+  $("tt-right").classList.toggle("on", blink);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* ================= clock ================= */
+function tickClock(){
+  const d = new Date();
+  $("clock").textContent = String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
+  $("datestr").textContent = d.toLocaleDateString("en-GB", { weekday:"short", month:"short", day:"numeric" });
+}
+tickClock(); setInterval(tickClock, 10000);
+
+/* ================= controls ================= */
+$("btnDrive").addEventListener("click", () => {
+  S.driving = !S.driving; S.manual = false; $("throttle").value = 0; $("thrval").textContent = "0%";
+  $("btnDrive").textContent = S.driving ? "⏸ Pause simulation" : "▶ Drive simulation";
+});
+$("throttle").addEventListener("input", e => {
+  S.throttle = +e.target.value; $("thrval").textContent = S.throttle + "%";
+  if (S.throttle > 0){ S.manual = true; S.driving = false; $("btnDrive").textContent = "▶ Drive simulation"; }
+  else S.manual = false;
+});
+$("modeseg").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  document.querySelectorAll("#modeseg button").forEach(x => x.classList.toggle("on", x === b));
+  mode = MODES[b.dataset.mode];
+  document.documentElement.style.setProperty("--accent", mode.accent);
+  $("modename").textContent = mode.name;
+});
+$("themeseg").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  document.querySelectorAll("#themeseg button").forEach(x => x.classList.toggle("on", x === b));
+  clusterEl.dataset.theme = b.dataset.themeVal;
+});
+$("chkBeam").addEventListener("change", e => $("tt-beam").classList.toggle("on", e.target.checked));
+$("chkBelt").addEventListener("change", e => $("tt-belt").classList.toggle("on", e.target.checked));
+$("chkSignal").addEventListener("change", e => { S.signals = e.target.checked; });
 </script>
 </body>
 </html>
