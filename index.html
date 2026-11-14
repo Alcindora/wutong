@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>wutong-cluster — Interactive Instrument Cluster in Vanilla JavaScript</title>
+<title>wutong-cluster — Interactive Instrument Cluster in Vanilla JavaScript | 交互式汽车仪表</title>
 <meta name="description" content="A fully interactive automotive instrument cluster rendered with vanilla JavaScript and Canvas 2D. Live needle physics, drive modes, themes and a driving simulation. No frameworks, no build step.">
 <style>
   :root{
@@ -85,9 +85,10 @@
 <div class="wrap">
   <header class="site">
     <h1>wutong-cluster<span class="dot">.js</span></h1>
-    <p>An interactive automotive instrument cluster, rendered live with vanilla JavaScript + Canvas 2D.</p>
+    <p id="tagline">An interactive automotive instrument cluster, rendered live with vanilla JavaScript + Canvas 2D.</p>
     <div class="spacer"></div>
-    <a class="ghlink" href="https://github.com/Alcindora/wutong">View source on GitHub</a>
+    <button class="ghlink" id="langToggle" style="cursor:pointer;background:none">中文</button>
+    <a class="ghlink" id="ghlink" href="https://github.com/Alcindora/wutong">View source on GitHub</a>
   </header>
 
   <section class="stage">
@@ -108,20 +109,20 @@
       <div class="mid">
         <div class="dialbox"><canvas id="dialSpeed"></canvas></div>
         <div class="centerbox">
-          <div class="gear"><span id="gear">D</span><small>GEAR</small></div>
+          <div class="gear"><span id="gear">D</span><small id="gearLabel">GEAR</small></div>
           <div class="socwrap">
-            <div class="socmeta"><span>BATTERY</span><b><span id="soc">78</span>%</b></div>
+            <div class="socmeta"><span id="socLabel">BATTERY</span><b><span id="soc">78</span>%</b></div>
             <div class="socbar"><i id="socfill"></i></div>
           </div>
-          <div class="range">RANGE <b id="range">412</b> km</div>
+          <div class="range"><span id="rangeLabel">RANGE</span> <b id="range">412</b> km</div>
         </div>
         <div class="dialbox"><canvas id="dialPower"></canvas></div>
       </div>
 
       <div class="botbar">
-        <span>ODO <b id="odo">48620.0</b> km</span>
-        <span>TRIP <b id="trip">128.4</b> km</span>
-        <span>AVG <b id="avg">14.2</b> kWh/100km</span>
+        <span><span id="odoLabel">ODO</span> <b id="odo">48620.0</b> km</span>
+        <span><span id="tripLabel">TRIP</span> <b id="trip">128.4</b> km</span>
+        <span><span id="avgLabel">AVG</span> <b id="avg">14.2</b> kWh/100km</span>
         <span id="modename">COMFORT</span>
       </div>
     </div>
@@ -129,7 +130,7 @@
 
   <section class="controls">
     <button class="btn primary" id="btnDrive">▶ Drive simulation</button>
-    <div class="sliderbox">Throttle <input type="range" id="throttle" min="0" max="100" value="0"><span id="thrval">0%</span></div>
+    <div class="sliderbox"><span id="thrLabel">Throttle</span> <input type="range" id="throttle" min="0" max="100" value="0"><span id="thrval">0%</span></div>
     <div class="seg" id="modeseg">
       <button data-mode="eco">Eco</button>
       <button data-mode="comfort" class="on">Comfort</button>
@@ -139,45 +140,45 @@
       <button data-theme-val="dark" class="on">Dark</button>
       <button data-theme-val="light">Light</button>
     </div>
-    <label class="chk"><input type="checkbox" id="chkBeam"> High beam</label>
-    <label class="chk"><input type="checkbox" id="chkBelt"> Belt warning</label>
-    <label class="chk"><input type="checkbox" id="chkSignal"> Turn signals</label>
+    <label class="chk"><input type="checkbox" id="chkBeam"> <span id="beamLabel">High beam</span></label>
+    <label class="chk"><input type="checkbox" id="chkBelt"> <span id="beltLabel">Belt warning</span></label>
+    <label class="chk"><input type="checkbox" id="chkSignal"> <span id="sigLabel">Turn signals</span></label>
   </section>
 
   <section class="about">
     <div class="card">
-      <h2>What is this?</h2>
-      <p>A working instrument-cluster renderer that runs entirely in the browser. Both gauges are drawn on
+      <h2 id="c1t">What is this?</h2>
+      <p id="c1b">A working instrument-cluster renderer that runs entirely in the browser. Both gauges are drawn on
       <code>&lt;canvas&gt;</code> every animation frame — ticks, arcs, numerals and needles are computed in
       JavaScript, not images. It is a reference implementation for anyone building dashboard or HMI interfaces on the web.</p>
     </div>
     <div class="card">
-      <h2>Features</h2>
+      <h2 id="c2t">Features</h2>
       <ul>
-        <li>Spring-physics needles (stiffness + damping), no CSS transitions</li>
-        <li>Drive simulation with acceleration, cruise and regenerative braking</li>
-        <li>Eco / Comfort / Sport modes re-tune ranges, redline and accent color</li>
-        <li>Dark &amp; light cluster themes, live clock, tell-tale indicators</li>
-        <li>Retina-aware canvas sizing, zero dependencies, zero build step</li>
+        <li id="f1">Spring-physics needles (stiffness + damping), no CSS transitions</li>
+        <li id="f2">Drive simulation with acceleration, cruise and regenerative braking</li>
+        <li id="f3">Eco / Comfort / Sport modes re-tune ranges, redline and accent color</li>
+        <li id="f4">Dark &amp; light cluster themes, live clock, tell-tale indicators</li>
+        <li id="f5">Retina-aware canvas sizing, zero dependencies, zero build step</li>
       </ul>
     </div>
     <div class="card">
-      <h2>How it works</h2>
-      <p>One <code>requestAnimationFrame</code> loop integrates a simple vehicle model (throttle → power → speed,
+      <h2 id="c3t">How it works</h2>
+      <p id="c3b">One <code>requestAnimationFrame</code> loop integrates a simple vehicle model (throttle → power → speed,
       with drag and regen), then feeds both values through independent spring integrators so the needles
       overshoot and settle like real stepper-motor gauges. Drawing code is plain Canvas 2D paths.</p>
     </div>
     <div class="card">
-      <h2>Reuse it</h2>
-      <p>The whole demo is a single <code>index.html</code> in the
+      <h2 id="c4t">Reuse it</h2>
+      <p id="c4b">The whole demo is a single <code>index.html</code> in the
       <a href="https://github.com/Alcindora/wutong">GitHub repository</a> (MIT). Copy the gauge renderer,
       change the scales, and it becomes a tachometer, a pressure gauge, or an industrial dashboard.</p>
     </div>
   </section>
 
   <footer class="site">
-    <span>Built by <a href="https://wutong.qd.je">Wu Tong (Alcindora)</a> — automotive HMI designer &amp; developer, Nanjing.</span>
-    <span>Vanilla JavaScript · Canvas 2D · No frameworks</span>
+    <span id="foot1">Built by <a href="https://wutong.qd.je">Wu Tong (Alcindora)</a> — automotive HMI designer &amp; developer, Nanjing.</span>
+    <span id="foot2">Vanilla JavaScript · Canvas 2D · No frameworks</span>
   </footer>
 </div>
 
@@ -190,6 +191,7 @@ const MODES = {
   sport:   { name:"SPORT",   accent:"#fb7185", maxSpeed:260, powerMax:240, powerMin:-80, redFrom:190 }
 };
 let mode = MODES.comfort;
+let modeKey = "comfort";
 const S = {
   speed:0, power:0,                       // displayed (spring) values
   speedV:0, powerV:0,                     // spring velocities
@@ -333,9 +335,9 @@ function frame(now){
   [S.power, S.powerV] = spring(S.power, S.powerV, S.powerT, 34, 8.5, dt);
 
   drawDial($("dialSpeed"), { value:S.speed, min:0, max:mode.maxSpeed, step:20, major:40,
-                             unit:"km/h", label:"SPEED" });
+                             unit:"km/h", label:cur.speed });
   drawDial($("dialPower"), { value:S.power, min:mode.powerMin, max:mode.powerMax, step:40, major:40,
-                             unit:"kW", label:"POWER", redFrom:mode.redFrom, zeroAt:0 });
+                             unit:"kW", label:cur.power, redFrom:mode.redFrom, zeroAt:0 });
 
   // center + bars (cheap DOM updates)
   $("gear").textContent = S.speedT > 1 ? "D" : (S.driving || S.manual ? "D" : "P");
@@ -363,22 +365,87 @@ function tickClock(){
 }
 tickClock(); setInterval(tickClock, 10000);
 
+/* ================= i18n （中英双语） ================= */
+const T = {
+  en: { tagline:"An interactive automotive instrument cluster, rendered live with vanilla JavaScript + Canvas 2D.",
+    ghlink:"View source on GitHub", gearLabel:"GEAR", socLabel:"BATTERY", rangeLabel:"RANGE",
+    odoLabel:"ODO", tripLabel:"TRIP", avgLabel:"AVG", thrLabel:"Throttle",
+    beamLabel:"High beam", beltLabel:"Belt warning", sigLabel:"Turn signals",
+    driveStart:"▶ Drive simulation", drivePause:"⏸ Pause simulation",
+    modes:{eco:"Eco",comfort:"Comfort",sport:"Sport"}, themes:{dark:"Dark",light:"Light"},
+    modeNames:{eco:"ECO",comfort:"COMFORT",sport:"SPORT"}, speed:"SPEED", power:"POWER",
+    c1t:"What is this?",
+    c1b:"A working instrument-cluster renderer that runs entirely in the browser. Both gauges are drawn on <code>&lt;canvas&gt;</code> every animation frame — ticks, arcs, numerals and needles are computed in JavaScript, not images. It is a reference implementation for anyone building dashboard or HMI interfaces on the web.",
+    c2t:"Features",
+    f1:"Spring-physics needles (stiffness + damping), no CSS transitions",
+    f2:"Drive simulation with acceleration, cruise and regenerative braking",
+    f3:"Eco / Comfort / Sport modes re-tune ranges, redline and accent color",
+    f4:"Dark &amp; light cluster themes, live clock, tell-tale indicators",
+    f5:"Retina-aware canvas sizing, zero dependencies, zero build step",
+    c3t:"How it works",
+    c3b:"One <code>requestAnimationFrame</code> loop integrates a simple vehicle model (throttle → power → speed, with drag and regen), then feeds both values through independent spring integrators so the needles overshoot and settle like real stepper-motor gauges. Drawing code is plain Canvas 2D paths.",
+    c4t:"Reuse it",
+    c4b:"The whole demo is a single <code>index.html</code> in the <a href=\"https://github.com/Alcindora/wutong\">GitHub repository</a> (MIT). Copy the gauge renderer, change the scales, and it becomes a tachometer, a pressure gauge, or an industrial dashboard.",
+    foot1:"Built by <a href=\"https://wutong.qd.je\">Wu Tong (Alcindora)</a> — automotive HMI designer &amp; developer, Nanjing.",
+    foot2:"Vanilla JavaScript · Canvas 2D · No frameworks", toggle:"中文" },
+  zh: { tagline:"一个交互式汽车数字仪表，全部用原生 JavaScript + Canvas 2D 实时渲染。",
+    ghlink:"在 GitHub 查看源码", gearLabel:"挡位", socLabel:"电量", rangeLabel:"续航",
+    odoLabel:"总里程", tripLabel:"小计里程", avgLabel:"平均电耗", thrLabel:"油门",
+    beamLabel:"远光灯", beltLabel:"安全带提醒", sigLabel:"转向灯",
+    driveStart:"▶ 驾驶模拟", drivePause:"⏸ 暂停模拟",
+    modes:{eco:"节能",comfort:"舒适",sport:"运动"}, themes:{dark:"深色",light:"浅色"},
+    modeNames:{eco:"节能",comfort:"舒适",sport:"运动"}, speed:"车速", power:"功率",
+    c1t:"这是什么？",
+    c1b:"一个完全在浏览器里运行的仪表渲染器。两个表盘都画在 <code>&lt;canvas&gt;</code> 上逐帧重绘——刻度、弧线、数字和指针全部由 JavaScript 计算出来，不是图片。它是一个参考实现，写给所有要在 Web 上做仪表盘或 HMI 界面的人。",
+    c2t:"功能特点",
+    f1:"弹簧物理指针（刚度＋阻尼），不用 CSS 过渡糊弄",
+    f2:"驾驶模拟：加速、巡航、动能回收制动一整圈",
+    f3:"节能 / 舒适 / 运动三模式，量程、红线、主题色随之而变",
+    f4:"深 / 浅两套仪表主题、实时时钟、告警指示灯",
+    f5:"按 devicePixelRatio 适配高清屏，零依赖、零构建步骤",
+    c3t:"工作原理",
+    c3b:"一个 <code>requestAnimationFrame</code> 循环驱动一个简易车辆模型（油门 → 功率 → 车速，含风阻与动能回收），再把两个数值分别送进独立的弹簧积分器，让指针像真实步进电机表盘一样过冲、回稳。绘制全部使用原生 Canvas 2D 路径。",
+    c4t:"拿去复用",
+    c4b:"整个演示就是 <a href=\"https://github.com/Alcindora/wutong\">GitHub 仓库</a>里的一个 <code>index.html</code>（MIT 协议）。复制表盘渲染器、改改量程，它就能变成转速表、压力表或工业仪表盘。",
+    foot1:"作者：<a href=\"https://wutong.qd.je\">吴桐（Alcindora）</a>——汽车 HMI 设计师与开发者，南京。",
+    foot2:"原生 JavaScript · Canvas 2D · 无框架", toggle:"EN" }
+};
+let cur = T.en, curLang = "en";
+function applyLang(){
+  ["tagline","ghlink","gearLabel","socLabel","rangeLabel","odoLabel","tripLabel","avgLabel",
+   "thrLabel","beamLabel","beltLabel","sigLabel","c1t","c2t","f1","f2","f3","f4","f5","c3t","c4t"]
+   .forEach(id => { $(id).textContent = cur[id]; });
+  ["c1b","c3b","c4b","foot1","foot2"].forEach(id => { $(id).innerHTML = cur[id]; });
+  document.querySelectorAll("#modeseg button").forEach(b => b.textContent = cur.modes[b.dataset.mode]);
+  document.querySelectorAll("#themeseg button").forEach(b => b.textContent = cur.themes[b.dataset.themeVal]);
+  $("modename").textContent = cur.modeNames[modeKey];
+  $("btnDrive").textContent = S.driving ? cur.drivePause : cur.driveStart;
+  $("langToggle").textContent = cur.toggle;
+  document.documentElement.lang = curLang === "zh" ? "zh-CN" : "en";
+}
+$("langToggle").addEventListener("click", () => {
+  curLang = curLang === "en" ? "zh" : "en";
+  cur = T[curLang];
+  applyLang();
+});
+
 /* ================= controls ================= */
 $("btnDrive").addEventListener("click", () => {
   S.driving = !S.driving; S.manual = false; $("throttle").value = 0; $("thrval").textContent = "0%";
-  $("btnDrive").textContent = S.driving ? "⏸ Pause simulation" : "▶ Drive simulation";
+  $("btnDrive").textContent = S.driving ? cur.drivePause : cur.driveStart;
 });
 $("throttle").addEventListener("input", e => {
   S.throttle = +e.target.value; $("thrval").textContent = S.throttle + "%";
-  if (S.throttle > 0){ S.manual = true; S.driving = false; $("btnDrive").textContent = "▶ Drive simulation"; }
+  if (S.throttle > 0){ S.manual = true; S.driving = false; $("btnDrive").textContent = cur.driveStart; }
   else S.manual = false;
 });
 $("modeseg").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
   document.querySelectorAll("#modeseg button").forEach(x => x.classList.toggle("on", x === b));
-  mode = MODES[b.dataset.mode];
+  modeKey = b.dataset.mode;
+  mode = MODES[modeKey];
   document.documentElement.style.setProperty("--accent", mode.accent);
-  $("modename").textContent = mode.name;
+  $("modename").textContent = cur.modeNames[modeKey];
 });
 $("themeseg").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
