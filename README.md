@@ -4,7 +4,7 @@ An interactive automotive instrument cluster that runs entirely in the browser.
 Both gauges are drawn on `<canvas>` every animation frame — ticks, arcs, numerals
 and needles are computed in JavaScript. No images, no frameworks, no build step.
 
-**Live demo:** https://alcindora.github.io/wutong/ (also at https://wutong.js.org once DNS is approved)
+**Live demo:** https://alcindora.github.io/wutong/ — bilingual 中文 / English, use the toggle in the page header （页面右上角可切换中英文）。
 
 ## Features
 
@@ -17,6 +17,7 @@ and needles are computed in JavaScript. No images, no frameworks, no build step.
 - Dark and light cluster themes, live clock, tell-tale indicators
   (turn signals, high beam, seat-belt reminder)
 - Retina-aware canvas sizing via `devicePixelRatio`
+- 中英双语界面：页面右上角一键切换（演示文案、表盘标签、模式名称全套翻译）
 
 ## How it works
 
