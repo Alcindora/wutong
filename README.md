@@ -4,7 +4,7 @@ An interactive automotive instrument cluster that runs entirely in the browser.
 Both gauges are drawn on `<canvas>` every animation frame — ticks, arcs, numerals
 and needles are computed in JavaScript. No images, no frameworks, no build step.
 
-**Live demo:** https://alcindora.github.io/wutong/ — bilingual 中文 / English, use the toggle in the page header （页面右上角可切换中英文）。
+**Live demo:** https://wutong.qd.je/wutong/ — bilingual 中文 / English, use the toggle in the page header （页面右上角可切换中英文）。
 
 ## Features
 
@@ -51,5 +51,5 @@ dashboard. MIT licensed.
 
 ## Author
 
-Wu Tong (Alcindora) — automotive HMI designer & developer, Nanjing.
+Wu Tong (wutongworks) — automotive HMI designer & developer, Nanjing.
 Homepage: https://wutong.qd.je
